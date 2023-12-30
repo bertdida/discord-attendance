@@ -1,6 +1,7 @@
-import moment from "moment";
+import moment from "moment-timezone";
 import { CommandInteraction, SlashCommandBuilder } from "discord.js";
 
+import config from "@/config/app";
 import { Op } from "sequelize";
 import Guild from "@/models/guild";
 import Member from "@/models/member";
@@ -38,8 +39,8 @@ export async function execute(interaction: CommandInteraction) {
     },
   });
 
-  const startOfToday = moment().startOf("day").toDate();
-  const endOfToday = moment().endOf("day").toDate();
+  const startOfToday = moment().tz(config.TIMEZONE).startOf("day").toDate();
+  const endOfToday = moment().tz(config.TIMEZONE).endOf("day").toDate();
 
   const attendance = await Attendance.findOne({
     where: {

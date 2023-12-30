@@ -1,0 +1,11 @@
+const path = require("path");
+
+// Replace parentDir with `src` when running migrations
+const parentDir = "dist";
+
+module.exports = {
+  config: path.resolve(parentDir, "config", "db.js"),
+  "models-path": path.resolve(parentDir, "models"),
+  "seeders-path": path.resolve(parentDir, "seeders"),
+  "migrations-path": path.resolve(parentDir, "migrations"),
+};

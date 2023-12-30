@@ -1,7 +1,8 @@
 import { Client, Events, GatewayIntentBits, Collection } from "discord.js";
 
-import config from "./config";
-import commands, { Command } from "./commands";
+import config from "@/config/app";
+import db from "@/models";
+import commands, { Command } from "@/commands";
 import deployCommands from "./deploy-commands";
 
 type ClientWithCommands = Client & {
@@ -24,12 +25,23 @@ commands.forEach((command) => {
 client.once(Events.ClientReady, async (readyClient) => {
   console.log(`🚀 Logged in as ${readyClient.user.tag}`);
 
-  const deployments = readyClient.guilds.cache.map(deployCommands);
-  await Promise.all(deployments);
+  const guilds = await readyClient.guilds.fetch();
+  const guildsArray = guilds.map((guild) => guild) as any[];
+
+  const promises = guildsArray.map(deployCommands);
+  const results = await Promise.allSettled(promises);
+
+  results.forEach((result) => {
+    if (result.status === "rejected") {
+      console.error(result.reason);
+    }
+  });
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
-  if (!interaction.isChatInputCommand()) return;
+  if (!interaction.isChatInputCommand()) {
+    return;
+  }
 
   const command = (interaction.client as ClientWithCommands).commands.get(
     interaction.commandName
@@ -58,4 +70,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
   }
 });
 
-client.login(config.DISCORD_TOKEN);
+db.sequelize
+  .authenticate()
+  .then(() => {
+    client.login(config.DISCORD_TOKEN);
+  })
+  .catch((error) => {
+    console.error(error.message);
+    process.exit(1);
+  });

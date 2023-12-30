@@ -2,12 +2,24 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const expectedVariables = <const>["DISCORD_TOKEN", "DISCORD_CLIENT_ID"];
+const expectedVariables = <const>[
+  "DISCORD_TOKEN",
+  "DISCORD_CLIENT_ID",
+  "DB_USER",
+  "DB_PASS",
+  "DB_NAME",
+  "DB_HOST",
+  "DB_NAME",
+  "NODE_ENV",
+];
 
 type ExpectedVariables = (typeof expectedVariables)[number];
 
 export type AppProcessEnv = {
   [key in ExpectedVariables]: string;
+} & {
+  TIMEZONE: string;
+  NODE_ENV: "production" | "development";
 };
 
 const config = Object.fromEntries(
@@ -24,4 +36,7 @@ function throwIfNot<T, K extends keyof T>(obj: Partial<T>, prop: K): T[K] {
   }
 }
 
-export default config;
+export default {
+  ...config,
+  TIMEZONE: "Asia/Manila",
+};

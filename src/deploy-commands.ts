@@ -1,7 +1,7 @@
 import { Guild, REST, Routes } from "discord.js";
 
-import config from "./config";
-import commands from "./commands";
+import config from "@/config/app";
+import commands from "@/commands";
 
 const rest = new REST().setToken(config.DISCORD_TOKEN);
 

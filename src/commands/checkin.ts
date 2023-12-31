@@ -62,6 +62,7 @@ export async function execute(interaction: CommandInteraction) {
     guildId: guild.id,
     memberId: member.id,
     type: "IN",
+    date: moment().tz(config.TIMEZONE).toDate(),
   });
 
   return interaction.reply("You have checked in successfully.");

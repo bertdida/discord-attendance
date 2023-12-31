@@ -45,6 +45,10 @@ export async function execute(message: Message) {
     checkoutNote = content.replace(`/checkout ${dateArg}`, "").trim();
   }
 
+  if (!checkoutNote.length) {
+    return message.reply("Please provide a note.");
+  }
+
   const [guild] = await Guild.findOrCreate({
     attributes: ["id"],
     where: {
@@ -108,6 +112,7 @@ export async function execute(message: Message) {
     memberId: member.id,
     type: "OUT",
     note: checkoutNote,
+    date: endOfDay,
   });
 
   return message.reply("You have successfully checked out.");

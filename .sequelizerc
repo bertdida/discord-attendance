@@ -1,6 +1,6 @@
 const path = require("path");
 
-// Replace parentDir with `src` when running migrations
+// Replace parentDir with `src` when creating migrations
 const parentDir = "dist";
 
 module.exports = {

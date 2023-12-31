@@ -27,6 +27,7 @@ class Attendance extends Model<
   declare memberId: number;
   declare type: AttendanceType;
   declare note?: string;
+  declare date: Date;
 
   declare readonly createdAt: CreationOptional<Date>;
   declare readonly updatedAt: CreationOptional<Date>;
@@ -65,6 +66,10 @@ Attendance.init(
     note: {
       allowNull: true,
       type: DataTypes.TEXT("long"),
+    },
+    date: {
+      allowNull: false,
+      type: DataTypes.DATE,
     },
     createdAt: {
       allowNull: false,

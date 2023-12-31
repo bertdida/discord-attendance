@@ -3,6 +3,7 @@ import { Client, Events, GatewayIntentBits, Collection } from "discord.js";
 import config from "@/config/app";
 import db from "@/models";
 import commands, { Command } from "@/commands";
+import commandsMessage from "@/commands-message";
 import deployCommands from "./deploy-commands";
 
 type ClientWithCommands = Client & {
@@ -65,6 +66,28 @@ client.on(Events.InteractionCreate, async (interaction) => {
       await interaction.reply({
         content: "There was an error while executing this command.",
         ephemeral: true,
+      });
+    }
+  }
+});
+
+client.on(Events.MessageCreate, async (message) => {
+  if (message.author.bot) {
+    return;
+  }
+
+  const content = message.content.trim();
+  const command = commandsMessage.find((command) => {
+    return content.startsWith(`/${command.data.name}`);
+  });
+
+  if (command) {
+    try {
+      await command.execute(message);
+    } catch (error) {
+      console.error(error);
+      message.reply({
+        content: "There was an error while executing this command.",
       });
     }
   }

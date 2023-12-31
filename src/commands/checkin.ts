@@ -1,8 +1,8 @@
 import moment from "moment-timezone";
+import { Op } from "sequelize";
 import { CommandInteraction, SlashCommandBuilder } from "discord.js";
 
 import config from "@/config/app";
-import { Op } from "sequelize";
 import Guild from "@/models/guild";
 import Member from "@/models/member";
 import Attendance from "@/models/attendance";
@@ -13,7 +13,7 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction: CommandInteraction) {
   if (!interaction.guild) {
-    return interaction.reply("❌ This command must be used in a guild.");
+    return interaction.reply("This command must be used in a guild.");
   }
 
   const [guild] = await Guild.findOrCreate({
@@ -55,7 +55,7 @@ export async function execute(interaction: CommandInteraction) {
   });
 
   if (attendance) {
-    return interaction.reply("❌ You have already checked in today.");
+    return interaction.reply("You have already checked in today.");
   }
 
   await Attendance.create({
@@ -64,5 +64,5 @@ export async function execute(interaction: CommandInteraction) {
     type: "IN",
   });
 
-  return interaction.reply("✅ You have checked in successfully.");
+  return interaction.reply("You have checked in successfully.");
 }

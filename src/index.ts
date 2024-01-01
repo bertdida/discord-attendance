@@ -78,7 +78,9 @@ client.on(Events.MessageCreate, async (message) => {
 
   const content = message.content.trim();
   const command = commandsMessage.find((command) => {
-    return content.startsWith(`/${command.data.name}`);
+    return content.startsWith(
+      `${config.DISCORD_COMMAND_PREFIX}${command.data.name}`
+    );
   });
 
   if (command) {
@@ -88,6 +90,9 @@ client.on(Events.MessageCreate, async (message) => {
       console.error(error);
       message.reply({
         content: "There was an error while executing this command.",
+        options: {
+          ephemeral: true,
+        },
       });
     }
   }

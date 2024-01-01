@@ -2,6 +2,7 @@ import moment from "moment-timezone";
 import { Message, EmbedBuilder, Colors } from "discord.js";
 import { Op } from "sequelize";
 
+import config from "@/config/app";
 import Guild from "@/models/guild";
 import Member from "@/models/member";
 import Attendance from "@/models/attendance";
@@ -11,6 +12,8 @@ export const data = {
   description: "Logs your daily work end time.",
 };
 
+const command = `${config.DISCORD_COMMAND_PREFIX}${data.name}`;
+
 export async function execute(message: Message) {
   if (!message.guild) {
     return;
@@ -18,15 +21,15 @@ export async function execute(message: Message) {
 
   const content = message.content.trim();
 
-  if (!content.startsWith("/checkout")) {
+  if (!content.startsWith(command)) {
     return;
   }
 
-  const checkoutWithDatePattern = /^\/checkout (?<dateArg>\S+)/;
+  const checkoutWithDatePattern = new RegExp(`^${command} (?<dateArg>\\S+)`);
   const match = checkoutWithDatePattern.exec(content);
 
   let checkoutDate = moment().format("MM/DD/YY");
-  let checkoutNote = content.replace("/checkout", "").trim();
+  let checkoutNote = content.replace(command, "").trim();
 
   if (match) {
     const dateArg = match.groups?.dateArg || "";
@@ -52,7 +55,7 @@ export async function execute(message: Message) {
     }
 
     checkoutDate = dateArg;
-    checkoutNote = content.replace(`/checkout ${dateArg}`, "").trim();
+    checkoutNote = content.replace(`${command} ${dateArg}`, "").trim();
   }
 
   if (!checkoutNote.length) {
@@ -176,9 +179,10 @@ class DateArgError extends Error {
 
 function validateCheckoutDateArg(dateArg: string) {
   const datePattern = /^\d{2}\/\d{2}\/\d{2}$/;
+
   if (!datePattern.test(dateArg)) {
     throw new DateArgError(
-      "Invalid date format. Please use the format `/checkout MM/DD/YY`."
+      `Invalid date format. Please use the format \`${command}\` MM/DD/YY`
     );
   }
 

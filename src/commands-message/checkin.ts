@@ -2,6 +2,7 @@ import moment from "moment-timezone";
 import { Message, EmbedBuilder, Colors } from "discord.js";
 import { Op } from "sequelize";
 
+import config from "@/config/app";
 import Guild from "@/models/guild";
 import Member from "@/models/member";
 import Attendance from "@/models/attendance";
@@ -18,7 +19,7 @@ export async function execute(message: Message) {
 
   const content = message.content.trim();
 
-  if (!content.startsWith("/checkin")) {
+  if (!content.startsWith(`${config.DISCORD_COMMAND_PREFIX}${data.name}`)) {
     return;
   }
 

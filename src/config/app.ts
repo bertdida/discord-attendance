@@ -21,6 +21,7 @@ export type AppProcessEnv = {
 } & {
   TIMEZONE: string;
   NODE_ENV: "production" | "development";
+  DISCORD_COMMAND_PREFIX: string;
 };
 
 const config = Object.fromEntries(
@@ -40,6 +41,7 @@ function throwIfNot<T, K extends keyof T>(obj: Partial<T>, prop: K): T[K] {
 const configObject = {
   ...config,
   TIMEZONE: "Asia/Manila",
+  DISCORD_COMMAND_PREFIX: process.env.DISCORD_COMMAND_PREFIX || "!",
 };
 
 moment.tz.setDefault(configObject.TIMEZONE);

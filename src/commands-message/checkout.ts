@@ -1,5 +1,5 @@
-import moment from "moment";
-import { Message } from "discord.js";
+import moment from "moment-timezone";
+import { Message, EmbedBuilder, Colors } from "discord.js";
 import { Op } from "sequelize";
 
 import Guild from "@/models/guild";
@@ -35,10 +35,20 @@ export async function execute(message: Message) {
       validateCheckoutDateArg(dateArg);
     } catch (error) {
       if (error instanceof DateArgError) {
-        return message.reply(error.message);
+        return message.reply({
+          content: error.message,
+          options: {
+            ephemeral: true,
+          },
+        });
       }
 
-      return message.reply("There was an error while executing this command.");
+      return message.reply({
+        content: "There was an error while executing this command.",
+        options: {
+          ephemeral: true,
+        },
+      });
     }
 
     checkoutDate = dateArg;
@@ -46,7 +56,12 @@ export async function execute(message: Message) {
   }
 
   if (!checkoutNote.length) {
-    return message.reply("Please provide a note.");
+    return message.reply({
+      content: "Please provide a summary of your work before checking out.",
+      options: {
+        ephemeral: true,
+      },
+    });
   }
 
   const [guild] = await Guild.findOrCreate({
@@ -87,9 +102,13 @@ export async function execute(message: Message) {
   });
 
   if (!checkIn) {
-    return message.reply(
-      "You have not checked in yet. Please check in first before checking out."
-    );
+    return message.reply({
+      content:
+        "You have not checked in yet. Please check in first before checking out.",
+      options: {
+        ephemeral: true,
+      },
+    });
   }
 
   const checkOut = await Attendance.findOne({
@@ -104,18 +123,48 @@ export async function execute(message: Message) {
   });
 
   if (checkOut) {
-    return message.reply("You have already checked out.");
+    return message.reply({
+      content: "You have already checked out today.",
+      options: {
+        ephemeral: true,
+      },
+    });
   }
+
+  const now = moment();
+  const checkoutDateWithTime = moment(checkoutDate, "MM/DD/YY");
+  checkoutDateWithTime.hour(now.hour());
+  checkoutDateWithTime.minute(now.minute());
+  checkoutDateWithTime.second(now.second());
+  checkoutDateWithTime.millisecond(now.millisecond());
 
   await Attendance.create({
     guildId: guild.id,
     memberId: member.id,
     type: "OUT",
     note: checkoutNote,
-    date: endOfDay,
+    date: checkoutDateWithTime.toDate(),
   });
 
-  return message.reply("You have successfully checked out.");
+  const embed = new EmbedBuilder()
+    .setColor(Colors.Red)
+    .setAuthor({
+      name: `${message.author.globalName} has checked out`,
+      iconURL: message.author.displayAvatarURL(),
+    })
+    .setTimestamp(checkoutDateWithTime.toDate())
+    .addFields({
+      name: "Work Summary",
+      value: "```\n" + checkoutNote + "\n```",
+    });
+
+  if (message.deletable) {
+    await message.delete();
+  }
+
+  message.channel.send({
+    embeds: [embed],
+  });
 }
 
 class DateArgError extends Error {

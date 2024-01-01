@@ -1,3 +1,4 @@
+import moment from "moment-timezone";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -36,7 +37,10 @@ function throwIfNot<T, K extends keyof T>(obj: Partial<T>, prop: K): T[K] {
   }
 }
 
-export default {
+const configObject = {
   ...config,
   TIMEZONE: "Asia/Manila",
 };
+
+moment.tz.setDefault(configObject.TIMEZONE);
+export default configObject;

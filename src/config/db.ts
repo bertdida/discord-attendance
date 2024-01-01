@@ -25,6 +25,7 @@ const config = <Config>{
     host: app.DB_HOST,
     dialect: "postgres",
     logging: false,
+    ssl: true,
   },
   get development() {
     return {
@@ -32,6 +33,7 @@ const config = <Config>{
       dialect: "sqlite",
       host: path.resolve(__dirname, "..", "..", `${app.DB_NAME}.sqlite`),
       logging: console.log,
+      ssl: false,
     };
   },
   get test() {

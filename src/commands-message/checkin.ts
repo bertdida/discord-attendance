@@ -36,7 +36,6 @@ export async function execute(message: Message) {
 
   const [member] = await Member.findOrCreate({
     attributes: ["id"],
-
     where: {
       discordId: message.author.id,
     },
@@ -49,19 +48,20 @@ export async function execute(message: Message) {
   const startOfToday = moment().startOf("day").toDate();
   const endOfToday = moment().endOf("day").toDate();
 
-  const attendance = await Attendance.findOne({
+  const checkIn = await Attendance.findOne({
+    attributes: ["id"],
     where: {
       guildId: guild.id,
       memberId: member.id,
       type: "IN",
-      createdAt: {
+      date: {
         [Op.gte]: startOfToday,
         [Op.lte]: endOfToday,
       },
     },
   });
 
-  if (attendance) {
+  if (checkIn) {
     return message.reply({
       content: "You have already checked in today.",
       options: {

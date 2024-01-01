@@ -80,7 +80,6 @@ export async function execute(message: Message) {
 
   const [member] = await Member.findOrCreate({
     attributes: ["id"],
-
     where: {
       discordId: message.author.id,
     },
@@ -98,7 +97,7 @@ export async function execute(message: Message) {
       memberId: member.id,
       guildId: guild.id,
       type: "IN",
-      createdAt: {
+      date: {
         [Op.gte]: startOfDay,
         [Op.lte]: endOfDay,
       },
@@ -120,7 +119,7 @@ export async function execute(message: Message) {
       memberId: member.id,
       guildId: guild.id,
       type: "OUT",
-      createdAt: {
+      date: {
         [Op.gte]: startOfDay,
         [Op.lte]: endOfDay,
       },

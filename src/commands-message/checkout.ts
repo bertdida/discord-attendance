@@ -60,7 +60,7 @@ export async function execute(message: Message) {
 
   if (!checkoutNote.length) {
     return message.reply({
-      content: "Please provide a summary of your work before checking out.",
+      content: "Please provide a summary of your work to check out.",
       options: {
         ephemeral: true,
       },

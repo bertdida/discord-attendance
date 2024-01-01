@@ -4,6 +4,7 @@ import {
   InferAttributes,
   InferCreationAttributes,
   CreationOptional,
+  Association,
 } from "sequelize";
 
 import { sequelize } from "@/models/db";
@@ -31,6 +32,11 @@ class Attendance extends Model<
 
   declare readonly createdAt: CreationOptional<Date>;
   declare readonly updatedAt: CreationOptional<Date>;
+
+  declare static associations: {
+    guild: Association<Attendance, Guild>;
+    member: Association<Attendance, Member>;
+  };
 }
 
 Attendance.init(

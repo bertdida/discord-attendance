@@ -1,6 +1,11 @@
 import moment from "moment-timezone";
 import { Op } from "sequelize";
-import { CommandInteraction, SlashCommandBuilder } from "discord.js";
+import {
+  CommandInteraction,
+  SlashCommandBuilder,
+  EmbedBuilder,
+  Colors,
+} from "discord.js";
 import nodeHtmlToImage from "node-html-to-image";
 
 import Attendance from "@/models/attendance";
@@ -61,7 +66,7 @@ export async function execute(interaction: CommandInteraction) {
     });
   }
 
-  await interaction.reply("Generating attendance report...");
+  await interaction.deferReply();
 
   const guildMembers = interaction.guild.members.cache.filter((member) => !member.user.bot); // prettier-ignore
   const guildMemberIds = guildMembers.map((member) => member.id);
@@ -151,7 +156,15 @@ export async function execute(interaction: CommandInteraction) {
   })) as Buffer;
 
   return interaction.editReply({
-    content: `Attendance report from ${startDateOption} to ${endDateOption}.`,
+    embeds: [
+      new EmbedBuilder()
+        .setColor(Colors.Blue)
+        .setDescription(
+          `Attendance report from ${startDateOption} to ${endDateOption}.`
+        )
+        .setImage("attachment://report.png")
+        .setTimestamp(),
+    ],
     files: [
       {
         attachment: buffer,

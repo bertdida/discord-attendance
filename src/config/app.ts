@@ -41,7 +41,7 @@ function throwIfNot<T, K extends keyof T>(obj: Partial<T>, prop: K): T[K] {
 const configObject = {
   ...config,
   TIMEZONE: "Asia/Manila",
-  DISCORD_COMMAND_PREFIX: process.env.DISCORD_COMMAND_PREFIX || "!",
+  DISCORD_COMMAND_PREFIX: process.env.DISCORD_COMMAND_PREFIX || ">",
 };
 
 moment.tz.setDefault(configObject.TIMEZONE);

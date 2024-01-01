@@ -23,17 +23,24 @@ const config = <Config>{
     password: app.DB_PASS,
     database: app.DB_NAME,
     host: app.DB_HOST,
-    dialect: "postgres",
     logging: false,
-    ssl: true,
+    dialect: "postgres",
+    protocol: "postgres",
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false,
+      },
+    },
   },
   get development() {
     return {
-      ...this.production,
+      username: app.DB_USER,
+      password: app.DB_PASS,
+      database: app.DB_NAME,
       dialect: "sqlite",
       host: path.resolve(__dirname, "..", "..", `${app.DB_NAME}.sqlite`),
       logging: console.log,
-      ssl: false,
     };
   },
   get test() {

@@ -23,7 +23,7 @@ const config = <Config>{
     password: app.DB_PASS,
     database: app.DB_NAME,
     host: app.DB_HOST,
-    dialect: "mysql",
+    dialect: "postgres",
     logging: false,
   },
   get development() {

@@ -96,6 +96,7 @@ export async function execute(message: Message) {
   const checkIn = await Attendance.findOne({
     where: {
       memberId: member.id,
+      guildId: guild.id,
       type: "IN",
       createdAt: {
         [Op.gte]: startOfDay,
@@ -117,6 +118,7 @@ export async function execute(message: Message) {
   const checkOut = await Attendance.findOne({
     where: {
       memberId: member.id,
+      guildId: guild.id,
       type: "OUT",
       createdAt: {
         [Op.gte]: startOfDay,

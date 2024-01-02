@@ -151,7 +151,7 @@ export async function execute(interaction: CommandInteraction) {
     html,
     selector: "#report",
     puppeteerArgs: {
-      args: ["--no-sandbox"],
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
     },
   })) as Buffer;
 

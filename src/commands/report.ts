@@ -1,8 +1,26 @@
 import moment from "moment-timezone";
 import { Op } from "sequelize";
-import { CommandInteraction, SlashCommandBuilder } from "discord.js";
+import {
+  CommandInteraction,
+  SlashCommandBuilder,
+  EmbedBuilder,
+  Colors,
+} from "discord.js";
+import nodeHtmlToImage from "node-html-to-image";
 
 import Attendance from "@/models/attendance";
+
+type AttendanceRecord = {
+  name: string;
+  totalHours: number;
+  attendance: {
+    [date: string]: {
+      in?: Date;
+      out?: Date;
+      totalHours: number;
+    };
+  };
+};
 
 export const data = new SlashCommandBuilder()
   .setName("report")
@@ -48,6 +66,8 @@ export async function execute(interaction: CommandInteraction) {
     });
   }
 
+  await interaction.deferReply();
+
   const guildMembers = interaction.guild.members.cache.filter((member) => !member.user.bot); // prettier-ignore
   const guildMemberIds = guildMembers.map((member) => member.id);
 
@@ -57,48 +77,178 @@ export async function execute(interaction: CommandInteraction) {
   const endDateOption = interaction.options.get("enddate")?.value as string;
   const endDate = moment(endDateOption, "MM/DD/YY").endOf("day").toDate();
 
-  const promises = guildMemberIds.map(async (memberId) => {
-    return Attendance.findAll({
-      where: {
-        date: {
-          [Op.between]: [startDate, endDate],
-        },
-      },
-      order: [["date", "ASC"]],
-      include: [
-        {
-          required: false,
-          association: Attendance.associations.member,
-          where: {
-            discordId: memberId,
+  const promises = guildMemberIds.map<Promise<AttendanceRecord>>(
+    async (memberId) => {
+      const attendances = await Attendance.findAll({
+        where: {
+          date: {
+            [Op.between]: [startDate, endDate],
           },
         },
-        {
-          required: false,
-          association: Attendance.associations.guild,
-          where: {
-            discordId: interaction.guild!.id,
+        order: [["date", "ASC"]],
+        include: [
+          {
+            required: false,
+            association: Attendance.associations.member,
+            where: {
+              discordId: memberId,
+            },
           },
-        },
-      ],
-    });
-  });
+          {
+            required: false,
+            association: Attendance.associations.guild,
+            where: {
+              discordId: interaction.guild!.id,
+            },
+          },
+        ],
+      });
+
+      let totalHours = 0;
+      const attendance: AttendanceRecord["attendance"] = {};
+
+      attendances.forEach((record) => {
+        const date = moment(record.date).format("MM/DD/YY");
+
+        if (!attendance[date]) {
+          attendance[date] = {
+            in: record.date,
+            out: record.date,
+            totalHours: 0,
+          };
+        }
+
+        if (record.type === "IN") {
+          attendance[date].in = record.date;
+        }
+
+        if (record.type === "OUT") {
+          attendance[date].out = record.date;
+        }
+
+        const inMoment = moment(attendance[date].in);
+        const outMoment = moment(attendance[date].out);
+        const diffHours = Math.round(outMoment.diff(inMoment, "hours", true));
+
+        attendance[date].totalHours = diffHours;
+        totalHours += attendance[date].totalHours;
+      });
+
+      const member = guildMembers.find((member) => member.id === memberId);
+
+      return {
+        name: member?.displayName || "N/A",
+        attendance,
+        totalHours,
+      };
+    }
+  );
 
   const results = (await Promise.all(promises)).flat();
-  const groupedByDate = results.reduce((grouped, attendance) => {
-    const date = moment(attendance.date).format("MM/DD/YY");
-    return {
-      ...grouped,
-      [date]: [...(grouped[date] || []), attendance],
-    };
-  }, {} as Record<string, Attendance[]>);
 
-  // TODO: Respond with a message containing the report.
+  const html = generateHTML(results);
+  const buffer = (await nodeHtmlToImage({
+    html,
+    selector: "#report",
+    puppeteerArgs: {
+      args: ["--no-sandbox"],
+    },
+  })) as Buffer;
 
-  return interaction.reply({
-    content: "This command is not yet implemented.",
-    ephemeral: true,
+  return interaction.editReply({
+    embeds: [
+      new EmbedBuilder()
+        .setColor(Colors.Blue)
+        .setDescription(
+          `Attendance report from ${startDateOption} to ${endDateOption}.`
+        )
+        .setImage("attachment://report.png")
+        .setTimestamp(),
+    ],
+    files: [
+      {
+        attachment: buffer,
+        name: "report.png",
+      },
+    ],
   });
+}
+
+function generateHTML(records: AttendanceRecord[]): string {
+  const createAttendanceCell = (
+    attendance: AttendanceRecord["attendance"][0]
+  ) => {
+    const inSymbol = attendance.in ? "✅" : "❌";
+    const outSymbol = attendance.out ? "✅" : "❌";
+    return `
+      <td>${inSymbol}</td>
+      <td>${outSymbol}</td>
+      <td>${attendance.totalHours}</td>
+    `;
+  };
+
+  const uniqueDates = Array.from(
+    new Set(records.flatMap((record) => Object.keys(record.attendance)))
+  ).sort();
+
+  let headerRow1 = '<tr><th rowspan="2">Name</th><th rowspan="2">Days</th>';
+  let headerRow2 = "<tr>";
+
+  uniqueDates.forEach((date) => {
+    headerRow1 += `<th colspan="3">${date}</th>`;
+    headerRow2 += "<th>In</th><th>Out</th><th>Hrs</th>";
+  });
+
+  headerRow1 += "</tr>";
+  headerRow2 += "</tr>";
+
+  let bodyRows = "";
+  records.forEach((record) => {
+    const workedDays = Object.keys(record.attendance).filter((key) => {
+      const attendance = record.attendance[key];
+      return attendance.in && attendance.out;
+    });
+
+    bodyRows += `
+      <tr>
+        <th>${record.name}</th>
+        <td>${workedDays.length}</td>`;
+
+    uniqueDates.forEach((date) => {
+      bodyRows += record.attendance[date]
+        ? createAttendanceCell(record.attendance[date])
+        : '<td colspan="3">-</td>';
+    });
+
+    bodyRows += "</tr>";
+  });
+
+  return `
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Attendance Record</title>
+    <style>
+      table { font-family: "Courier New", Courier, monospace; }
+      table, th, td { border: solid 1px; border-collapse: collapse; table-layout: fixed; }
+      td, th { text-align: center; padding: 4px 8px; }
+      tbody th:first-child { text-align: left; }
+    </style>
+  </head>
+  <body>
+    <table id="report">
+      <thead>
+        ${headerRow1}
+        ${headerRow2}
+      </thead>
+      <tbody>
+        ${bodyRows}
+      </tbody>
+    </table>
+  </body>
+</html>`;
 }
 
 class DateOptionsError extends Error {

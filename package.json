@@ -3,7 +3,8 @@
     "dev": "nodemon --config nodemon.json --watch src --exec \"npm run build && npm run start\"",
     "build": "tsc -p tsconfig.json && tscpaths -p tsconfig.json -s ./src -o ./dist",
     "db": "sh ./bin/db.sh",
-    "start": "node ./dist/index.js"
+    "start": "node ./dist/index.js",
+    "heroku-postbuild": "mkdir ./.cache && mv /app/.cache/puppeteer ./.cache"
   },
   "dependencies": {
     "discord.js": "^14.14.1",

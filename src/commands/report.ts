@@ -7,6 +7,7 @@ import {
   Colors,
 } from "discord.js";
 import puppeteerCore from "puppeteer-core";
+import { executablePath } from "puppeteer";
 import nodeHtmlToImage from "node-html-to-image";
 
 import Attendance from "@/models/attendance";
@@ -153,6 +154,7 @@ export async function execute(interaction: CommandInteraction) {
     selector: "#report",
     puppeteer: puppeteerCore,
     puppeteerArgs: {
+      executablePath: executablePath(),
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
     },
   })) as Buffer;

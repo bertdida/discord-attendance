@@ -6,6 +6,7 @@ import {
   EmbedBuilder,
   Colors,
 } from "discord.js";
+import puppeteerCore from "puppeteer-core";
 import nodeHtmlToImage from "node-html-to-image";
 
 import Attendance from "@/models/attendance";
@@ -150,6 +151,7 @@ export async function execute(interaction: CommandInteraction) {
   const buffer = (await nodeHtmlToImage({
     html,
     selector: "#report",
+    puppeteer: puppeteerCore,
     puppeteerArgs: {
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
     },

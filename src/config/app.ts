@@ -22,6 +22,7 @@ export type AppProcessEnv = {
   TIMEZONE: string;
   NODE_ENV: "production" | "development";
   DISCORD_COMMAND_PREFIX: string;
+  DATABASE_URL?: string;
 };
 
 const config = Object.fromEntries(

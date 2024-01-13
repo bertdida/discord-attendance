@@ -19,10 +19,7 @@ interface Config {
 
 const config = <Config>{
   production: {
-    username: app.DB_USER,
-    password: app.DB_PASS,
-    database: app.DB_NAME,
-    host: app.DB_HOST,
+    database: app.DATABASE_URL,
     logging: false,
     dialect: "postgres",
     protocol: "postgres",

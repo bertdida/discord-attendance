@@ -79,10 +79,11 @@ export async function execute(message: Message) {
     date: checkInDate,
   });
 
+  const name = message.author.globalName || message.author.displayName;
   const embed = new EmbedBuilder()
     .setColor(Colors.Green)
     .setAuthor({
-      name: `${message.author.globalName} has checked in`,
+      name: `${name} has checked in`,
       iconURL: message.author.displayAvatarURL(),
     })
     .setTimestamp(checkInDate);

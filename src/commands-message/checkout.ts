@@ -150,10 +150,11 @@ export async function execute(message: Message) {
     date: checkoutDateWithTime.toDate(),
   });
 
+  const name = message.author.globalName || message.author.displayName;
   const embed = new EmbedBuilder()
     .setColor(Colors.Red)
     .setAuthor({
-      name: `${message.author.globalName} has checked out`,
+      name: `${name} has checked out`,
       iconURL: message.author.displayAvatarURL(),
     })
     .setTimestamp(checkoutDateWithTime.toDate())

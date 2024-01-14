@@ -6,11 +6,6 @@ dotenv.config();
 const expectedVariables = <const>[
   "DISCORD_TOKEN",
   "DISCORD_CLIENT_ID",
-  "DB_USER",
-  "DB_PASS",
-  "DB_NAME",
-  "DB_HOST",
-  "DB_NAME",
   "NODE_ENV",
 ];
 
@@ -23,6 +18,10 @@ export type AppProcessEnv = {
   NODE_ENV: "production" | "development";
   DISCORD_COMMAND_PREFIX: string;
   DATABASE_URL?: string;
+  DB_USER?: string;
+  DB_PASS?: string;
+  DB_NAME?: string;
+  DB_HOST?: string;
 };
 
 const config = Object.fromEntries(

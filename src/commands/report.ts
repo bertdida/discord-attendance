@@ -153,6 +153,7 @@ export async function execute(interaction: CommandInteraction) {
     html,
     selector: "#report",
     puppeteer: puppeteerCore,
+    waitUntil: "networkidle0",
     puppeteerArgs: {
       executablePath: executablePath(),
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
@@ -185,8 +186,8 @@ function generateHTML(records: AttendanceRecord[]): string {
     const inSymbol = attendance.in ? "✅" : "❌";
     const outSymbol = attendance.out ? "✅" : "❌";
     return `
-      <td>${inSymbol}</td>
-      <td>${outSymbol}</td>
+      <td class="emoji">${inSymbol}</td>
+      <td class="emoji">${outSymbol}</td>
       <td>${attendance.totalHours}</td>
     `;
   };
@@ -234,11 +235,20 @@ function generateHTML(records: AttendanceRecord[]): string {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Attendance Record</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap" rel="stylesheet">
+
     <style>
       table { font-family: "Courier New", Courier, monospace; }
       table, th, td { border: solid 1px; border-collapse: collapse; table-layout: fixed; }
       td, th { text-align: center; padding: 4px 8px; }
       tbody th:first-child { text-align: left; }
+
+      .emoji {
+        font-family: 'Noto Color Emoji', sans-serif;
+      }
     </style>
   </head>
   <body>

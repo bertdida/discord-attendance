@@ -19,7 +19,7 @@ interface Config {
 
 const config = <Config>{
   production: {
-    database: app.DATABASE_URL,
+    ...parsePostgresConnectionString(String(app.DATABASE_URL)),
     logging: false,
     dialect: "postgres",
     protocol: "postgres",
@@ -48,6 +48,21 @@ const config = <Config>{
     };
   },
 };
+
+function parsePostgresConnectionString(connectionString: string): {
+  host: string;
+  username: string;
+  password: string;
+  database: string;
+} {
+  const url = new URL(connectionString);
+  return {
+    host: url.hostname,
+    username: url.username,
+    password: url.password,
+    database: url.pathname.replace(/^\//, ""),
+  };
+}
 
 export default config;
 module.exports = config; // required for sequelize-cli

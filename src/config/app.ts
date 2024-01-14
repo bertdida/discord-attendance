@@ -3,32 +3,44 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const expectedVariables = <const>[
+const requiredVariables = <const>[
   "DISCORD_TOKEN",
   "DISCORD_CLIENT_ID",
   "NODE_ENV",
 ];
 
-type ExpectedVariables = (typeof expectedVariables)[number];
+const optionalVariables = <const>[
+  "DATABASE_URL",
+  "DB_USER",
+  "DB_PASS",
+  "DB_NAME",
+  "DB_HOST",
+];
+
+type RequiredVariables = (typeof requiredVariables)[number];
+type OptionalVariables = (typeof optionalVariables)[number];
 
 export type AppProcessEnv = {
-  [key in ExpectedVariables]: string;
+  [key in RequiredVariables]: string;
+} & {
+  [key in OptionalVariables]?: string;
 } & {
   TIMEZONE: string;
   NODE_ENV: "production" | "development";
   DISCORD_COMMAND_PREFIX: string;
-  DATABASE_URL?: string;
-  DB_USER?: string;
-  DB_PASS?: string;
-  DB_NAME?: string;
-  DB_HOST?: string;
 };
 
 const config = Object.fromEntries(
-  expectedVariables.map((variable) => {
-    return [variable as ExpectedVariables, throwIfNot(process.env, variable)];
+  requiredVariables.map((variable) => {
+    return [variable as RequiredVariables, throwIfNot(process.env, variable)];
   })
 ) as AppProcessEnv;
+
+optionalVariables.forEach((variable) => {
+  if (process.env[variable] !== undefined) {
+    config[variable] = process.env[variable];
+  }
+});
 
 function throwIfNot<T, K extends keyof T>(obj: Partial<T>, prop: K): T[K] {
   if (obj[prop] === undefined || obj[prop] === null) {

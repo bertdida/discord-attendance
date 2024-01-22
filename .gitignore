@@ -5,3 +5,5 @@ TODO
 .history/
 node_modules/
 dist/
+
+.cache/

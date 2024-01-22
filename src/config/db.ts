@@ -19,7 +19,7 @@ interface Config {
 
 const config = <Config>{
   production: {
-    ...parsePostgresConnectionString(String(app.DATABASE_URL)),
+    ...(app.DATABASE_URL ? parsePostgresConnectionString(String(app.DATABASE_URL)) : {}),
     logging: false,
     dialect: "postgres",
     protocol: "postgres",

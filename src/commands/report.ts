@@ -38,7 +38,13 @@ export const data = new SlashCommandBuilder()
       .setName("enddate")
       .setDescription("End date for the attendance report.")
       .setRequired(true)
-  );
+  )
+  .addRoleOption((option) =>
+  option
+    .setName("role")
+    .setDescription("Filter by role.")
+    .setRequired(false)
+)
 
 export async function execute(interaction: CommandInteraction) {
   if (!interaction.guild) {
@@ -71,7 +77,8 @@ export async function execute(interaction: CommandInteraction) {
   await interaction.deferReply();
 
   const guildMembers = interaction.guild.members.cache.filter((member) => !member.user.bot); // prettier-ignore
-  const guildMemberIds = guildMembers.map((member) => member.id);
+  const roleOption = interaction.options.get("role")?.value as string | undefined;
+  const filteredMemberIds = roleOption ? guildMembers.filter((member) => member.roles.cache.has(roleOption)).map((member) => member.id) : guildMembers.map((member) => member.id); // prettier-ignore
 
   const startDateOption = interaction.options.get("startdate")?.value as string;
   const startDate = moment(startDateOption, "MM/DD/YY").startOf("day").toDate();
@@ -79,7 +86,7 @@ export async function execute(interaction: CommandInteraction) {
   const endDateOption = interaction.options.get("enddate")?.value as string;
   const endDate = moment(endDateOption, "MM/DD/YY").endOf("day").toDate();
 
-  const promises = guildMemberIds.map<Promise<AttendanceRecord>>(
+  const promises = filteredMemberIds.map<Promise<AttendanceRecord>>(
     async (memberId) => {
       const attendances = await Attendance.findAll({
         where: {
@@ -136,8 +143,8 @@ export async function execute(interaction: CommandInteraction) {
         totalHours += attendance[date].totalHours;
       });
 
-      const member = guildMembers.find((member) => member.id === memberId);
-
+      const member = interaction.guild!.members.cache.get(memberId);
+      
       return {
         name: member?.displayName || "N/A",
         attendance,

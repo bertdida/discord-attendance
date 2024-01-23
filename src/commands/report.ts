@@ -11,6 +11,7 @@ import { executablePath } from "puppeteer";
 import nodeHtmlToImage from "node-html-to-image";
 
 import Attendance from "@/models/attendance";
+import Member from "@/models/member";
 
 type AttendanceRecord = {
   name: string;
@@ -47,6 +48,18 @@ export const data = new SlashCommandBuilder()
 )
 
 export async function execute(interaction: CommandInteraction) {
+
+  const members = interaction.guild?.members.cache.filter((member) => !member.user.bot); // prettier-ignore
+  const rolePermissionAdmin = interaction.guild?.roles.cache.find((role) => role.name === "Manager" || role.name === "CTO");
+  const rolePermission = members?.some((member) => member.roles.cache.has(rolePermissionAdmin?.id || "")); // prettier-ignore
+
+  if (!rolePermission) {
+    return interaction.reply({
+      content: "You don't have permission to use this command.",  
+      ephemeral: true,
+    });
+  }
+
   if (!interaction.guild) {
     return interaction.reply({
       content: "This command must be used in a guild.",

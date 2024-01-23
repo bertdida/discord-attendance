@@ -49,9 +49,8 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction: CommandInteraction) {
 
-  const members = interaction.guild?.members.cache.filter((member) => !member.user.bot); // prettier-ignore
   const rolePermissionAdmin = interaction.guild?.roles.cache.find((role) => role.name === "Manager" || role.name === "CTO");
-  const rolePermission = members?.some((member) => member.roles.cache.has(rolePermissionAdmin?.id || "")); // prettier-ignore
+  const rolePermission = rolePermissionAdmin ? interaction.guild?.members.cache.get(interaction.user.id)?.roles.cache.has(rolePermissionAdmin?.id || "") : false; // prettier-ignore
 
   if (!rolePermission) {
     return interaction.reply({

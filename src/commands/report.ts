@@ -155,6 +155,12 @@ export async function execute(interaction: CommandInteraction) {
 
   const results = (await Promise.all(promises)).flat();
 
+  if (!results.length) {
+    return interaction.editReply({
+      content: "No attendance records found."
+    });
+  }
+
   const html = generateHTML(results);
   const buffer = (await nodeHtmlToImage({
     html,

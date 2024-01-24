@@ -58,10 +58,8 @@ export async function execute(interaction: CommandInteraction) {
   }
 
   if (!hasRequiredRole) {
-    const adminRoles = app.ADMIN_ROLE?.split(',') || [];
-    const formattedRoles = adminRoles.join(' or ');
     return interaction.reply({
-      content: `Only ${formattedRoles} can use this command.`,
+      content: `Only with the following roles can run this command: ${app.ADMIN_ROLE}`,
       ephemeral: true,
     });
   }

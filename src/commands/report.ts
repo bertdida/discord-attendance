@@ -48,18 +48,18 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction: CommandInteraction) {
   
-  const adminRoles = app.ADMIN_ROLES?.split(',') || [];
-  const rolePermissionAdmin = interaction.guild?.roles.cache.find((role) => adminRoles.includes(role.name));
+  const adminRoles = app.ADMIN_ROLE?.split(',') || [];
+  const matchedRole = interaction.guild?.roles.cache.find((role) => adminRoles.includes(role.name));
 
-  let hasRequiredRole = null;
-  if (rolePermissionAdmin) {
+  let hasRequiredRole: boolean = false;
+  if (matchedRole) {
     const member = interaction.guild?.members.cache.get(interaction.user.id);
-    hasRequiredRole = member?.roles.cache.has(rolePermissionAdmin.id);
+    hasRequiredRole = member?.roles.cache.has(matchedRole.id) ?? false;
   }
 
   if (!hasRequiredRole) {
     return interaction.reply({
-      content: "Only Manager or CTO can use this command.", 
+      content: `Only ${app.ADMIN_ROLE} can use this command.`, 
       ephemeral: true,
     });
   }

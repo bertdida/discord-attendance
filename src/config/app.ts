@@ -7,7 +7,6 @@ const requiredVariables = <const>[
   "DISCORD_TOKEN",
   "DISCORD_CLIENT_ID",
   "NODE_ENV",
-  "ADMIN_ROLES",
 ];
 
 const optionalVariables = <const>[
@@ -16,6 +15,7 @@ const optionalVariables = <const>[
   "DB_PASS",
   "DB_NAME",
   "DB_HOST",
+  "ADMIN_ROLES",
 ];
 
 type RequiredVariables = (typeof requiredVariables)[number];
@@ -28,7 +28,6 @@ export type AppProcessEnv = {
 } & {
   TIMEZONE: string;
   NODE_ENV: "production" | "development";
-  ADMIN_ROLES: "Manager" | "CTO";
   DISCORD_COMMAND_PREFIX: string;
 };
 

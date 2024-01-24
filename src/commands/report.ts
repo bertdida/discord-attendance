@@ -10,6 +10,7 @@ import puppeteerCore from "puppeteer-core";
 import { executablePath } from "puppeteer";
 import nodeHtmlToImage from "node-html-to-image";
 import Attendance from "@/models/attendance";
+import app from "@/config/app";
 
 type AttendanceRecord = {
   name: string;
@@ -47,7 +48,7 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction: CommandInteraction) {
   
-  const adminRoles = process.env.ADMIN_ROLES?.split(',') || [];
+  const adminRoles = app.ADMIN_ROLES?.split(',') || [];
   const rolePermissionAdmin = interaction.guild?.roles.cache.find((role) => adminRoles.includes(role.name));
 
   let hasRequiredRole = null;

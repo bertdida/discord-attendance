@@ -28,6 +28,7 @@ export type AppProcessEnv = {
 } & {
   TIMEZONE: string;
   NODE_ENV: "production" | "development";
+  ADMIN_ROLES: "Manager" | "CTO";
   DISCORD_COMMAND_PREFIX: string;
 };
 

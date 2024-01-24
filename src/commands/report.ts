@@ -9,8 +9,8 @@ import {
 import puppeteerCore from "puppeteer-core";
 import { executablePath } from "puppeteer";
 import nodeHtmlToImage from "node-html-to-image";
-
 import Attendance from "@/models/attendance";
+import app from "@/config/app";
 
 type AttendanceRecord = {
   name: string;
@@ -47,6 +47,23 @@ export const data = new SlashCommandBuilder()
 )
 
 export async function execute(interaction: CommandInteraction) {
+  
+  const adminRoles = app.ADMIN_ROLE?.split(',') || [];
+  const matchedRole = interaction.guild?.roles.cache.find((role) => adminRoles.includes(role.name));
+
+  let hasRequiredRole: boolean = false;
+  if (matchedRole) {
+    const member = interaction.guild?.members.cache.get(interaction.user.id);
+    hasRequiredRole = member?.roles.cache.has(matchedRole.id) ?? false;
+  }
+
+  if (!hasRequiredRole) {
+    return interaction.reply({
+      content: `Only with the following roles can run this command: ${app.ADMIN_ROLE}`,
+      ephemeral: true,
+    });
+  }
+
   if (!interaction.guild) {
     return interaction.reply({
       content: "This command must be used in a guild.",

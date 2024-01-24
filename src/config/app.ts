@@ -15,6 +15,7 @@ const optionalVariables = <const>[
   "DB_PASS",
   "DB_NAME",
   "DB_HOST",
+  "ADMIN_ROLE",
 ];
 
 type RequiredVariables = (typeof requiredVariables)[number];

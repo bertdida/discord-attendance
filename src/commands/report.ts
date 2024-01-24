@@ -6,12 +6,11 @@ import {
   EmbedBuilder,
   Colors,
 } from "discord.js";
+import dotenv from "dotenv"; 
 import puppeteerCore from "puppeteer-core";
 import { executablePath } from "puppeteer";
 import nodeHtmlToImage from "node-html-to-image";
-
 import Attendance from "@/models/attendance";
-import Member from "@/models/member";
 
 type AttendanceRecord = {
   name: string;
@@ -48,13 +47,20 @@ export const data = new SlashCommandBuilder()
 )
 
 export async function execute(interaction: CommandInteraction) {
+  
+  dotenv.config();
+  const adminRoles = process.env.ADMIN_ROLES?.split(',') || [];
+  const rolePermissionAdmin = interaction.guild?.roles.cache.find((role) => adminRoles.includes(role. name));
 
-  const rolePermissionAdmin = interaction.guild?.roles.cache.find((role) => role.name === "Manager" || role.name === "CTO");
-  const rolePermission = rolePermissionAdmin ? interaction.guild?.members.cache.get(interaction.user.id)?.roles.cache.has(rolePermissionAdmin?.id || "") : false; // prettier-ignore
+  let hasRequiredRole = null;
+  if (rolePermissionAdmin) {
+    const member = interaction.guild?.members.cache.get(interaction.user.id);
+    hasRequiredRole = member?.roles.cache.has(rolePermissionAdmin.id);
+  }
 
-  if (!rolePermission) {
+  if (!hasRequiredRole) {
     return interaction.reply({
-      content: "You don't have permission to use this command.",  
+      content: "Only Manager or CTO can use this command.",
       ephemeral: true,
     });
   }

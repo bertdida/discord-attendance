@@ -6,7 +6,6 @@ import {
   EmbedBuilder,
   Colors,
 } from "discord.js";
-import dotenv from "dotenv"; 
 import puppeteerCore from "puppeteer-core";
 import { executablePath } from "puppeteer";
 import nodeHtmlToImage from "node-html-to-image";
@@ -48,9 +47,8 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction: CommandInteraction) {
   
-  dotenv.config();
   const adminRoles = process.env.ADMIN_ROLES?.split(',') || [];
-  const rolePermissionAdmin = interaction.guild?.roles.cache.find((role) => adminRoles.includes(role. name));
+  const rolePermissionAdmin = interaction.guild?.roles.cache.find((role) => adminRoles.includes(role.name));
 
   let hasRequiredRole = null;
   if (rolePermissionAdmin) {
@@ -60,7 +58,7 @@ export async function execute(interaction: CommandInteraction) {
 
   if (!hasRequiredRole) {
     return interaction.reply({
-      content: "Only Manager or CTO can use this command.",
+      content: "Only Manager or CTO can use this command.", 
       ephemeral: true,
     });
   }

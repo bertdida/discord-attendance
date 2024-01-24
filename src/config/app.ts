@@ -7,6 +7,7 @@ const requiredVariables = <const>[
   "DISCORD_TOKEN",
   "DISCORD_CLIENT_ID",
   "NODE_ENV",
+  "ADMIN_ROLES",
 ];
 
 const optionalVariables = <const>[

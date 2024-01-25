@@ -44,10 +44,9 @@ export const data = new SlashCommandBuilder()
   );
 
 export async function execute(interaction: CommandInteraction) {
-  const adminRoles = app.ADMIN_ROLE?.split(",") || [];
+  const adminRoles = app.ADMIN_ROLE?.split(",").filter(Boolean) || [];
 
-  if (adminRoles.length && adminRoles[0] !== "") {
-    console.log(adminRoles);
+  if (adminRoles.length) {
     const matchedRole = interaction.guild?.roles.cache.find((role) =>
       adminRoles.includes(role.name)
     );

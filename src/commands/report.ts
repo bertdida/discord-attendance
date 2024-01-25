@@ -40,28 +40,29 @@ export const data = new SlashCommandBuilder()
       .setRequired(true)
   )
   .addRoleOption((option) =>
-  option
-    .setName("role")
-    .setDescription("Filter by role.")
-    .setRequired(false)
-)
+    option.setName("role").setDescription("Filter by role.").setRequired(false)
+  );
 
 export async function execute(interaction: CommandInteraction) {
-  
-  const adminRoles = app.ADMIN_ROLE?.split(',') || [];
-  const matchedRole = interaction.guild?.roles.cache.find((role) => adminRoles.includes(role.name));
+  const adminRoles = app.ADMIN_ROLE?.split(",").filter(Boolean) || [];
 
-  let hasRequiredRole: boolean = false;
-  if (matchedRole) {
-    const member = interaction.guild?.members.cache.get(interaction.user.id);
-    hasRequiredRole = member?.roles.cache.has(matchedRole.id) ?? false;
-  }
+  if (adminRoles.length) {
+    const matchedRole = interaction.guild?.roles.cache.find((role) =>
+      adminRoles.includes(role.name)
+    );
 
-  if (!hasRequiredRole) {
-    return interaction.reply({
-      content: `Only with the following roles can run this command: ${app.ADMIN_ROLE}`,
-      ephemeral: true,
-    });
+    let hasRequiredRole = false;
+    if (matchedRole) {
+      const member = interaction.guild?.members.cache.get(interaction.user.id);
+      hasRequiredRole = Boolean(member?.roles.cache.has(matchedRole.id));
+    }
+
+    if (!hasRequiredRole) {
+      return interaction.reply({
+        content: `Only users with the following roles can run this command: ${adminRoles}`,
+        ephemeral: true,
+      });
+    }
   }
 
   if (!interaction.guild) {
@@ -93,9 +94,18 @@ export async function execute(interaction: CommandInteraction) {
 
   await interaction.deferReply();
 
-  const guildMembers = interaction.guild.members.cache.filter((member) => !member.user.bot); // prettier-ignore
-  const roleOption = interaction.options.get("role")?.value as string | undefined;
-  const filteredMemberIds = roleOption ? guildMembers.filter((member) => member.roles.cache.has(roleOption)).map((member) => member.id) : guildMembers.map((member) => member.id); // prettier-ignore
+  const guildMembers = interaction.guild.members.cache.filter(
+    (member) => !member.user.bot
+  );
+
+  let memberIds = guildMembers.map((member) => member.id);
+  const roleOption = interaction.options.get("role")?.value;
+
+  if (typeof roleOption === "string") {
+    memberIds = guildMembers
+      .filter((member) => member.roles.cache.has(roleOption))
+      .map((member) => member.id);
+  }
 
   const startDateOption = interaction.options.get("startdate")?.value as string;
   const startDate = moment(startDateOption, "MM/DD/YY").startOf("day").toDate();
@@ -103,7 +113,7 @@ export async function execute(interaction: CommandInteraction) {
   const endDateOption = interaction.options.get("enddate")?.value as string;
   const endDate = moment(endDateOption, "MM/DD/YY").endOf("day").toDate();
 
-  const promises = filteredMemberIds.map<Promise<AttendanceRecord>>(
+  const promises = memberIds.map<Promise<AttendanceRecord>>(
     async (memberId) => {
       const attendances = await Attendance.findAll({
         where: {
@@ -161,7 +171,7 @@ export async function execute(interaction: CommandInteraction) {
       });
 
       const member = interaction.guild!.members.cache.get(memberId);
-      
+
       return {
         name: member?.displayName || "N/A",
         attendance,
@@ -174,7 +184,7 @@ export async function execute(interaction: CommandInteraction) {
 
   if (!results.length) {
     return interaction.editReply({
-      content: "No attendance records found."
+      content: "No attendance records found.",
     });
   }
 

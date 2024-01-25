@@ -51,16 +51,15 @@ export async function execute(interaction: CommandInteraction) {
       adminRoles.includes(role.name)
     );
 
-    let hasRequiredRole: boolean = false;
-
+    let hasRequiredRole = false;
     if (matchedRole) {
       const member = interaction.guild?.members.cache.get(interaction.user.id);
-      hasRequiredRole = member?.roles.cache.has(matchedRole.id) ?? false;
+      hasRequiredRole = Boolean(member?.roles.cache.has(matchedRole.id));
     }
 
     if (!hasRequiredRole) {
       return interaction.reply({
-        content: `Only users with the following roles can run this command: ${app.ADMIN_ROLE}`,
+        content: `Only users with the following roles can run this command: ${adminRoles}`,
         ephemeral: true,
       });
     }
@@ -95,11 +94,18 @@ export async function execute(interaction: CommandInteraction) {
 
   await interaction.deferReply();
 
-  const guildMembers = interaction.guild.members.cache.filter((member) => !member.user.bot); // prettier-ignore
-  const roleOption = interaction.options.get("role")?.value as
-    | string
-    | undefined;
-  const filteredMemberIds = roleOption ? guildMembers.filter((member) => member.roles.cache.has(roleOption)).map((member) => member.id) : guildMembers.map((member) => member.id); // prettier-ignore
+  const guildMembers = interaction.guild.members.cache.filter(
+    (member) => !member.user.bot
+  );
+
+  let memberIds = guildMembers.map((member) => member.id);
+  const roleOption = interaction.options.get("role")?.value;
+
+  if (typeof roleOption === "string") {
+    memberIds = guildMembers
+      .filter((member) => member.roles.cache.has(roleOption))
+      .map((member) => member.id);
+  }
 
   const startDateOption = interaction.options.get("startdate")?.value as string;
   const startDate = moment(startDateOption, "MM/DD/YY").startOf("day").toDate();
@@ -107,7 +113,7 @@ export async function execute(interaction: CommandInteraction) {
   const endDateOption = interaction.options.get("enddate")?.value as string;
   const endDate = moment(endDateOption, "MM/DD/YY").endOf("day").toDate();
 
-  const promises = filteredMemberIds.map<Promise<AttendanceRecord>>(
+  const promises = memberIds.map<Promise<AttendanceRecord>>(
     async (memberId) => {
       const attendances = await Attendance.findAll({
         where: {

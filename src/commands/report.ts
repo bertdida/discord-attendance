@@ -40,28 +40,31 @@ export const data = new SlashCommandBuilder()
       .setRequired(true)
   )
   .addRoleOption((option) =>
-  option
-    .setName("role")
-    .setDescription("Filter by role.")
-    .setRequired(false)
-)
+    option.setName("role").setDescription("Filter by role.").setRequired(false)
+  );
 
 export async function execute(interaction: CommandInteraction) {
-  
-  const adminRoles = app.ADMIN_ROLE?.split(',') || [];
-  const matchedRole = interaction.guild?.roles.cache.find((role) => adminRoles.includes(role.name));
+  const adminRoles = app.ADMIN_ROLE?.split(",") || [];
 
-  let hasRequiredRole: boolean = false;
-  if (matchedRole) {
-    const member = interaction.guild?.members.cache.get(interaction.user.id);
-    hasRequiredRole = member?.roles.cache.has(matchedRole.id) ?? false;
-  }
+  if (adminRoles.length && adminRoles[0] !== "") {
+    console.log(adminRoles);
+    const matchedRole = interaction.guild?.roles.cache.find((role) =>
+      adminRoles.includes(role.name)
+    );
 
-  if (!hasRequiredRole) {
-    return interaction.reply({
-      content: `Only with the following roles can run this command: ${app.ADMIN_ROLE}`,
-      ephemeral: true,
-    });
+    let hasRequiredRole: boolean = false;
+
+    if (matchedRole) {
+      const member = interaction.guild?.members.cache.get(interaction.user.id);
+      hasRequiredRole = member?.roles.cache.has(matchedRole.id) ?? false;
+    }
+
+    if (!hasRequiredRole) {
+      return interaction.reply({
+        content: `Only users with the following roles can run this command: ${app.ADMIN_ROLE}`,
+        ephemeral: true,
+      });
+    }
   }
 
   if (!interaction.guild) {
@@ -94,7 +97,9 @@ export async function execute(interaction: CommandInteraction) {
   await interaction.deferReply();
 
   const guildMembers = interaction.guild.members.cache.filter((member) => !member.user.bot); // prettier-ignore
-  const roleOption = interaction.options.get("role")?.value as string | undefined;
+  const roleOption = interaction.options.get("role")?.value as
+    | string
+    | undefined;
   const filteredMemberIds = roleOption ? guildMembers.filter((member) => member.roles.cache.has(roleOption)).map((member) => member.id) : guildMembers.map((member) => member.id); // prettier-ignore
 
   const startDateOption = interaction.options.get("startdate")?.value as string;
@@ -161,7 +166,7 @@ export async function execute(interaction: CommandInteraction) {
       });
 
       const member = interaction.guild!.members.cache.get(memberId);
-      
+
       return {
         name: member?.displayName || "N/A",
         attendance,
@@ -174,7 +179,7 @@ export async function execute(interaction: CommandInteraction) {
 
   if (!results.length) {
     return interaction.editReply({
-      content: "No attendance records found."
+      content: "No attendance records found.",
     });
   }
 

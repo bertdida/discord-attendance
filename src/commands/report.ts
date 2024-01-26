@@ -9,18 +9,20 @@ import {
 import puppeteerCore from "puppeteer-core";
 import { executablePath } from "puppeteer";
 import nodeHtmlToImage from "node-html-to-image";
-import Attendance from "@/models/attendance";
+import AttendanceModel from "@/models/attendance";
 import app from "@/config/app";
+
+type Attendance = {
+  in?: Date;
+  out?: Date;
+  totalHours: number;
+};
 
 type AttendanceRecord = {
   name: string;
   totalHours: number;
   attendance: {
-    [date: string]: {
-      in?: Date;
-      out?: Date;
-      totalHours: number;
-    };
+    [date: string]: Attendance;
   };
 };
 
@@ -44,16 +46,23 @@ export const data = new SlashCommandBuilder()
   );
 
 export async function execute(interaction: CommandInteraction) {
+  if (!interaction.guild) {
+    return interaction.reply({
+      content: "This command must be used in a guild.",
+      ephemeral: true,
+    });
+  }
+
   const adminRoles = app.ADMIN_ROLE?.split(",").filter(Boolean) || [];
 
   if (adminRoles.length) {
-    const matchedRole = interaction.guild?.roles.cache.find((role) =>
+    const matchedRole = interaction.guild.roles.cache.find((role) =>
       adminRoles.includes(role.name)
     );
 
     let hasRequiredRole = false;
     if (matchedRole) {
-      const member = interaction.guild?.members.cache.get(interaction.user.id);
+      const member = interaction.guild.members.cache.get(interaction.user.id);
       hasRequiredRole = Boolean(member?.roles.cache.has(matchedRole.id));
     }
 
@@ -63,13 +72,6 @@ export async function execute(interaction: CommandInteraction) {
         ephemeral: true,
       });
     }
-  }
-
-  if (!interaction.guild) {
-    return interaction.reply({
-      content: "This command must be used in a guild.",
-      ephemeral: true,
-    });
   }
 
   try {
@@ -94,9 +96,8 @@ export async function execute(interaction: CommandInteraction) {
 
   await interaction.deferReply();
 
-  const guildMembers = interaction.guild.members.cache.filter(
-    (member) => !member.user.bot
-  );
+  let guildMembers = await interaction.guild.members.fetch();
+  guildMembers = guildMembers.filter((member) => !member.user.bot);
 
   let memberIds = guildMembers.map((member) => member.id);
   const roleOption = interaction.options.get("role")?.value;
@@ -115,7 +116,7 @@ export async function execute(interaction: CommandInteraction) {
 
   const promises = memberIds.map<Promise<AttendanceRecord>>(
     async (memberId) => {
-      const attendances = await Attendance.findAll({
+      const attendances = await AttendanceModel.findAll({
         where: {
           date: {
             [Op.between]: [startDate, endDate],
@@ -124,15 +125,15 @@ export async function execute(interaction: CommandInteraction) {
         order: [["date", "ASC"]],
         include: [
           {
-            required: false,
-            association: Attendance.associations.member,
+            required: true,
+            association: AttendanceModel.associations.member,
             where: {
               discordId: memberId,
             },
           },
           {
-            required: false,
-            association: Attendance.associations.guild,
+            required: true,
+            association: AttendanceModel.associations.guild,
             where: {
               discordId: interaction.guild!.id,
             },
@@ -148,8 +149,8 @@ export async function execute(interaction: CommandInteraction) {
 
         if (!attendance[date]) {
           attendance[date] = {
-            in: record.date,
-            out: record.date,
+            in: record.type === "IN" ? record.date : undefined,
+            out: record.type === "OUT" ? record.date : undefined,
             totalHours: 0,
           };
         }
@@ -170,10 +171,11 @@ export async function execute(interaction: CommandInteraction) {
         totalHours += attendance[date].totalHours;
       });
 
-      const member = interaction.guild!.members.cache.get(memberId);
+      const member = guildMembers.get(memberId);
 
       return {
-        name: member?.displayName || "N/A",
+        name:
+          member?.displayName || member?.nickname || member?.id || "Unknown",
         attendance,
         totalHours,
       };
@@ -220,18 +222,6 @@ export async function execute(interaction: CommandInteraction) {
 }
 
 function generateHTML(records: AttendanceRecord[]): string {
-  const createAttendanceCell = (
-    attendance: AttendanceRecord["attendance"][0]
-  ) => {
-    const inSymbol = attendance.in ? "✅" : "❌";
-    const outSymbol = attendance.out ? "✅" : "❌";
-    return `
-      <td class="emoji">${inSymbol}</td>
-      <td class="emoji">${outSymbol}</td>
-      <td>${attendance.totalHours}</td>
-    `;
-  };
-
   const uniqueDates = Array.from(
     new Set(records.flatMap((record) => Object.keys(record.attendance)))
   ).sort();
@@ -248,10 +238,14 @@ function generateHTML(records: AttendanceRecord[]): string {
   headerRow2 += "</tr>";
 
   let bodyRows = "";
-  records.forEach((record) => {
+  const recordsOrderedByName = records.sort((recordA, recordB) =>
+    recordA.name.localeCompare(recordB.name)
+  );
+
+  recordsOrderedByName.forEach((record) => {
     const workedDays = Object.keys(record.attendance).filter((key) => {
       const attendance = record.attendance[key];
-      return attendance.in && attendance.out;
+      return attendance.in && attendance.out; // Only count days with both in and out
     });
 
     bodyRows += `
@@ -261,8 +255,8 @@ function generateHTML(records: AttendanceRecord[]): string {
 
     uniqueDates.forEach((date) => {
       bodyRows += record.attendance[date]
-        ? createAttendanceCell(record.attendance[date])
-        : '<td colspan="3">-</td>';
+        ? createAttendanceRow(record.attendance[date])
+        : createEmptyAttendanceRow();
     });
 
     bodyRows += "</tr>";
@@ -289,6 +283,9 @@ function generateHTML(records: AttendanceRecord[]): string {
       .emoji {
         font-family: 'Noto Color Emoji', sans-serif;
       }
+      .text-danger {
+        color: red;
+      }
     </style>
   </head>
   <body>
@@ -305,11 +302,28 @@ function generateHTML(records: AttendanceRecord[]): string {
 </html>`;
 }
 
-class DateOptionsError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "DateOptionsError";
-  }
+function createAttendanceRow(attendance: Attendance) {
+  const inSymbol = attendance.in ? "✅" : "❌";
+  const outSymbol = attendance.out ? "✅" : "❌";
+  const totalHoursClass = attendance.totalHours < 8 ? "text-danger" : "";
+
+  return `
+    <td class="emoji">${inSymbol}</td>
+    <td class="emoji">${outSymbol}</td>
+    <td>
+      <span class="${totalHoursClass}">
+        ${attendance.totalHours}
+      </span>
+    </td>
+  `;
+}
+
+function createEmptyAttendanceRow() {
+  return `
+    <td></td>
+    <td></td>
+    <td></td>
+  `;
 }
 
 function validateOptions(options: CommandInteraction["options"]) {
@@ -337,5 +351,12 @@ function validateOptions(options: CommandInteraction["options"]) {
 
   if (startDateMoment.isAfter(endDateMoment)) {
     throw new DateOptionsError("Start date cannot be after end date.");
+  }
+}
+
+class DateOptionsError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "DateOptionsError";
   }
 }

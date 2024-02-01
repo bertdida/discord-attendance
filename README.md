@@ -1,3 +1,3 @@
 #### Discord Attendance
 
-A Discord bot designed to help track employees' check-ins and check-outs
+A Discord bot that effortlessly tracks and reports employee check-ins and check-outs.

@@ -9,7 +9,7 @@ import Attendance from "@/models/attendance";
 
 export const data = {
   name: "checkin",
-  description: "Logs your daily work start time.",
+  description: `${config.DISCORD_COMMAND_PREFIX}checkin\nUse this command to mark your start of the workday.`,
 };
 
 export async function execute(message: Message) {

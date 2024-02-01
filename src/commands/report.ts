@@ -28,7 +28,9 @@ type AttendanceRecord = {
 
 export const data = new SlashCommandBuilder()
   .setName("report")
-  .setDescription("Displays members' attendance records.")
+  .setDescription(
+    `/report [startdate] [enddate] [role]\nUse this command to generate an attendance report.`
+  )
   .addStringOption((option) =>
     option
       .setName("startdate")

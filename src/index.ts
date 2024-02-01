@@ -27,7 +27,7 @@ commands.forEach((command) => {
 client.once(Events.ClientReady, async (readyClient) => {
   console.log(`🚀 Logged in as ${readyClient.user.tag}`);
 
-  await readyClient.user.setUsername("tymlog");
+  await readyClient.user.setUsername(config.BOT_NAME);
 
   const guilds = await readyClient.guilds.fetch();
   const guildsArray = guilds.map((guild) => guild) as any[];

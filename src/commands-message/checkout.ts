@@ -9,7 +9,7 @@ import Attendance from "@/models/attendance";
 
 export const data = {
   name: "checkout",
-  description: "Logs your daily work end time.",
+  description: `${config.DISCORD_COMMAND_PREFIX}checkout [date] [summary]\nUse this command to mark your end of the workday. You can optionally include a date in the format MM/DD/YY. If no date is provided, today's date will be used.`,
 };
 
 const command = `${config.DISCORD_COMMAND_PREFIX}${data.name}`;

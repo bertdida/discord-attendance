@@ -55,6 +55,7 @@ const configObject = {
   ...config,
   TIMEZONE: "Asia/Manila",
   DISCORD_COMMAND_PREFIX: process.env.DISCORD_COMMAND_PREFIX || ">",
+  BOT_NAME: "tymlog",
 };
 
 moment.tz.setDefault(configObject.TIMEZONE);
